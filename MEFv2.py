@@ -340,6 +340,7 @@ def MEF_ep(NDoF, nstep, NELE, connect, Nnodes, NGP, X, Y, dofelem, t, v, E, plan
     XYelem = np.matrix(np.zeros((Nnodes, 2)))  # Coordenadas do elemento
     ifPlast = np.zeros((NELE, NGP * NGP))  # Matriz booleana que guarda o estado em cada pt de Gauss em cada elemento
     tolD = 0.001  # Tolerância de incremento de deslocamento -----------------------------------------------------------
+    j2Elem = np.zeros(NELE)
 
     # Montagem do vetor Força
 
@@ -460,6 +461,7 @@ def MEF_ep(NDoF, nstep, NELE, connect, Nnodes, NGP, X, Y, dofelem, t, v, E, plan
                     # Verifica se o mateial escoou
                     J2 = 1/6 * ((sigma_xx - sigma_yy) ** 2 + sigma_yy ** 2 + sigma_xx ** 2) + sigma_xy ** 2 # Calcula o segundo invariante das tensões
                     f_yield = J2 - (ky**2) # ORIGINAL: f_yield = np.sqrt(J2) - ky
+                    j2Elem[iele] += np.sqrt(J2)
 
                     if f_yield > 0:
                         sigma_trial = sigma_total[:, i_sigma + m]
@@ -493,8 +495,12 @@ def MEF_ep(NDoF, nstep, NELE, connect, Nnodes, NGP, X, Y, dofelem, t, v, E, plan
             count += 1
             print(count)
 
-
+    data = open("j2.txt", "w")
+    for j2 in j2Elem:
+        j2 /= 4
+        data.write(f"{str(j2)}\n")
+    data.close()
 
     # Saída de dados da função "MEF_ep"
-    return D, sigma_total
+    return D, sigma_total, j2Elem
 
